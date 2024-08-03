@@ -1,8 +1,8 @@
-import User from '../models/user.model.js';
+
 import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
-
+import Prisma from '../DB/db.config.js';
 export const google = async (req, res, next) => {
     try {
       const user = await User.findOne({ email: req.body.email });
