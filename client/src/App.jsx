@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import SignIn from './pages/SignIn';
+import SignIn from './pages/Signin';
 import SignUp from './pages/SignUp';
 import About from './pages/About';
+import VideoUpload from './pages/VideoUpload';
 import Profile from './pages/Profile';
 import Header from './components/Header';
 import PrivateRoute from './components/PrivateRoute';
@@ -26,6 +27,7 @@ export default function App() {
         <Route element={<PrivateRoute />}>
           <Route path='/profile' element={<Profile />} />
           <Route path='/create-listing' element={<CreateListing />} />
+          <Route path='/videoupload' element={<VideoUpload />} />
           <Route
             path='/update-listing/:listingId'
             element={<UpdateListing />}
