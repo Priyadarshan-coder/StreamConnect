@@ -4,11 +4,12 @@ import crypto from 'crypto';
 import prisma from '../DB/db.config.js';
 import { generateBlobSASQueryParameters, ContainerSASPermissions, StorageSharedKeyCredential, BlobServiceClient } from '@azure/storage-blob';
 import { produceMessage } from '../services/kafka.js';
+import { dotenv } from 'dotenv';
+
+dotenv.config();
 // Azure Storage configuration
-const AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=youtubeclone;AccountKey=lRZh3a1akRy1OTo9hRLIRAx3qxO0uR+6owbQzWn8aaqhDDRJ3+AzeWdDZXu3ls0L/icrAb54GTG4+AStMa6PFA==;EndpointSuffix=core.windows.net";
-const containerName = 'video-chunks';
-const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
-const containerClient = blobServiceClient.getContainerClient(containerName);
+const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
+const containerClient = blobServiceClient.getContainerClient(process.env.containerName);
 
 // In-memory store for chunk paths
 const chunkPathsStore = {};

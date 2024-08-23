@@ -1,16 +1,18 @@
 import { Kafka } from 'kafkajs';
 import { reassembleVideo } from './reassemble.js';
+import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+dotenv.config();
 const kafka = new Kafka({
   clientId: 'video-transcode-service',
-  brokers: ["kafka-145be56e-youtube-clone1.b.aivencloud.com:14896"],
+  brokers: [process.env.KAFKA_SECRET],
   ssl:{
     ca: [fs.readFileSync(path.resolve("./ca.pem"), "utf-8")]
   },
   sasl:{
-    username: "avnadmin",
-    password: "AVNS_2362MCvfJOOA2aXLFyI",
+    username: process.env.KAFKA_USER,
+    password: process.env.KAFKA_PASS,
     mechanism: "plain",
   },
 });

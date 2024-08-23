@@ -6,6 +6,8 @@ node_modules
 dist
 dist-ssr
 *.local
+# Ignore PEM files
+*.pem
 
 # Editor directories and files
 .vscode/*

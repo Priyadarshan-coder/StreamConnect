@@ -4,11 +4,12 @@ import fs from 'fs-extra';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import axios from 'axios';
+import dotenv from 'dotenv'
+
+dotenv.config();
 //Azure Storage configuration
-const AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=youtubeclone;AccountKey=lRZh3a1akRy1OTo9hRLIRAx3qxO0uR+6owbQzWn8aaqhDDRJ3+AzeWdDZXu3ls0L/icrAb54GTG4+AStMa6PFA==;EndpointSuffix=core.windows.net";
-const containerName = 'video-chunks';
-const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
-const containerClient = blobServiceClient.getContainerClient(containerName);
+const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
+const containerClient = blobServiceClient.getContainerClient(process.env.containerName);
 // Define __dirname for ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +22,7 @@ fs.ensureDirSync(OUTPUT_DIR);
 function generateSAS(blobName) {
     const containerClient = blobServiceClient.getContainerClient(containerName);
     const blobClient = containerClient.getBlockBlobClient(blobName);
-    const sharedKeyCredential = new StorageSharedKeyCredential("youtubeclone", "lRZh3a1akRy1OTo9hRLIRAx3qxO0uR+6owbQzWn8aaqhDDRJ3+AzeWdDZXu3ls0L/icrAb54GTG4+AStMa6PFA==");
+    const sharedKeyCredential = new StorageSharedKeyCredential(process.env.AZURE_STORAGE, process.env.AZURE_SHARED_CREDENTIAL);
     const permissions = new ContainerSASPermissions();
     permissions.read = true;
     const expiresOn = new Date(new Date().valueOf() + 3600 * 1000); // 1 hour expiration
@@ -46,7 +47,7 @@ export const reassembleVideo = async (uniqueId, chunkPathsStore) => {
 
     const randomFilename = `${crypto.randomBytes(16).toString('hex')}.mp4`;
     const outputFilePath = path.join(OUTPUT_DIR, randomFilename);
-    const baseUrl = `https://youtubeclone.blob.core.windows.net/video-chunks/`;
+    const baseUrl = `https://youtubeclone.blob.core.windows.net/${process.env.containerName}/`;
 
     console.log(`Starting reassembly for video with unique ID: ${uniqueId}`);
 
