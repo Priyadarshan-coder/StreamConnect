@@ -4,9 +4,7 @@ import crypto from 'crypto';
 import prisma from '../DB/db.config.js';
 import { generateBlobSASQueryParameters, ContainerSASPermissions, StorageSharedKeyCredential, BlobServiceClient } from '@azure/storage-blob';
 import { produceMessage } from '../services/kafka.js';
-import { dotenv } from 'dotenv';
 
-dotenv.config();
 // Azure Storage configuration
 const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
 const containerClient = blobServiceClient.getContainerClient(process.env.containerName);
@@ -15,7 +13,6 @@ const containerClient = blobServiceClient.getContainerClient(process.env.contain
 const chunkPathsStore = {};
 let uploadCounter = 0;
 
-// Generate SAS token for a blob
 
 // Handle chunk uploads
 export const uploadChunks = async (req, res) => {

@@ -20,7 +20,7 @@ fs.ensureDirSync(UPLOAD_DIR);
 fs.ensureDirSync(OUTPUT_DIR);
 // Generate SAS token for a blob
 function generateSAS(blobName) {
-    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const containerClient = blobServiceClient.getContainerClient(process.env.containerName);
     const blobClient = containerClient.getBlockBlobClient(blobName);
     const sharedKeyCredential = new StorageSharedKeyCredential(process.env.AZURE_STORAGE, process.env.AZURE_SHARED_CREDENTIAL);
     const permissions = new ContainerSASPermissions();
@@ -28,7 +28,7 @@ function generateSAS(blobName) {
     const expiresOn = new Date(new Date().valueOf() + 3600 * 1000); // 1 hour expiration
 
     const sasQueryParams = generateBlobSASQueryParameters({
-        containerName: containerName,
+        containerName: process.env.containerName,
         blobName: blobName,
         permissions: permissions,
         expiresOn: expiresOn
@@ -98,7 +98,7 @@ export const reassembleVideo = async (uniqueId, chunkPathsStore) => {
         }
 
         console.log(`File reassembled and saved as ${randomFilename}`);
-        return `File reassembled and saved as ${randomFilename}`;
+        return randomFilename; 
     } catch (error) {
         console.error('Error reassembling video from Azure:', error);
         throw new Error('Failed to reassemble video from Azure');
