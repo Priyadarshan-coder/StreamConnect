@@ -1,81 +1,110 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  signInStart,
-  signInSuccess,
-  signInFailure,
-} from '../redux/user/userSlice';
-import OAuth from '../components/OAuth';
+import axios from "axios";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { loginFailure, loginStart, loginSuccess } from "../redux/user";
+import { auth, provider } from "../firebase";
+import { signInWithPopup } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
-export default function SignIn() {
-  const [formData, setFormData] = useState({});
-  const { loading, error } = useSelector((state) => state.user);
-  const navigate = useNavigate();
+const SignIn = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const dispatch = useDispatch();
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
-  };
-  const handleSubmit = async (e) => {
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
+    dispatch(loginStart());
     try {
-      dispatch(signInStart());
-      const res = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      console.log(data);
-      if (data.success === false) {
-        dispatch(signInFailure(data.message));
-        return;
-      }
-      dispatch(signInSuccess(data));
-      navigate('/');
-    } catch (error) {
-      dispatch(signInFailure(error.message));
+      const res = await axios.post("/api/auth/signin", { name, password });
+      dispatch(loginSuccess(res.data));
+      navigate("/");
+    } catch (err) {
+      dispatch(loginFailure());
     }
   };
-  return (
-    <div className='p-3 max-w-lg mx-auto'>
-      <h1 className='text-3xl text-center font-semibold my-7'>Sign In</h1>
-      <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
-        <input
-          type='email'
-          placeholder='email'
-          className='border p-3 rounded-lg'
-          id='email'
-          onChange={handleChange}
-        />
-        <input
-          type='password'
-          placeholder='password'
-          className='border p-3 rounded-lg'
-          id='password'
-          onChange={handleChange}
-        />
 
+  const signInWithGoogle = async () => {
+    dispatch(loginStart());
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        axios
+          .post("/api/auth/google", {
+            name: result.user.displayName,
+            email: result.user.email,
+            img: result.user.photoURL,
+          })
+          .then((res) => {
+            dispatch(loginSuccess(res.data));
+            navigate("/");
+          });
+      })
+      .catch((error) => {
+        dispatch(loginFailure());
+      });
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-100 text-gray-900">
+      <div className="flex flex-col items-center bg-white border border-gray-300 p-8 gap-4 rounded-lg shadow-lg">
+        <h1 className="text-2xl">Sign in</h1>
+        <h2 className="text-xl font-light">to continue to StreamConnect</h2>
+        <input
+          className="border border-gray-300 rounded-md p-2 w-full"
+          placeholder="username"
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          className="border border-gray-300 rounded-md p-2 w-full"
+          type="password"
+          placeholder="password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
         <button
-          disabled={loading}
-          className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
+          className="bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md cursor-pointer"
+          onClick={handleLogin}
         >
-          {loading ? 'Loading...' : 'Sign In'}
+          Sign in
         </button>
-        <OAuth/>
-      </form>
-      <div className='flex gap-2 mt-5'>
-        <p>Dont have an account?</p>
-        <Link to={'/sign-up'}>
-          <span className='text-blue-700'>Sign up</span>
-        </Link>
+        <h1 className="text-2xl">or</h1>
+        <button
+          className="bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md cursor-pointer"
+          onClick={signInWithGoogle}
+        >
+          Sign in with Google
+        </button>
+        <h1 className="text-2xl">or</h1>
+        <input
+          className="border border-gray-300 rounded-md p-2 w-full"
+          placeholder="username"
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          className="border border-gray-300 rounded-md p-2 w-full"
+          placeholder="email"
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          className="border border-gray-300 rounded-md p-2 w-full"
+          type="password"
+          placeholder="password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button className="bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md cursor-pointer">
+          Sign up
+        </button>
       </div>
-      {error && <p className='text-red-500 mt-5'>{error}</p>}
+      <div className="flex flex-col mt-4 text-xs text-gray-500">
+        <span>English(USA)</span>
+        <div className="flex mt-2">
+          <span className="ml-8">Help</span>
+          <span className="ml-8">Privacy</span>
+          <span className="ml-8">Terms</span>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default SignIn;

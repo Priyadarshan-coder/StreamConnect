@@ -1,39 +1,63 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import SignIn from './pages/Signin';
-import SignUp from './pages/SignUp';
-import About from './pages/About';
-import VideoUpload from './pages/VideoUpload';
-import Profile from './pages/Profile';
-import Header from './components/Header';
-import PrivateRoute from './components/PrivateRoute';
-import CreateListing from './pages/CreateListing';
-import UpdateListing from './pages/UpdateListing';
-import Listing from './pages/Listing';
-import Search from './pages/Search';
+import { useState } from "react";
+import styled, { ThemeProvider } from "styled-components";
+import Menu from "./components/Menu";
+import Navbar from "./components/Navbar";
+import { darkTheme, lightTheme } from "./utils/Theme";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Video from "./pages/Video";
+import SignIn from "./pages/SignIn";
+import Search from "./pages/Search";
+import { useSelector } from "react-redux";
+import Profile from "./pages/Profile";
+const Container = styled.div`
+  display: flex;
+`;
 
-export default function App() {
+const Main = styled.div`
+  flex: 7;
+  background-color: ${({ theme }) => theme.bg};
+`;
+const Wrapper = styled.div`
+  padding: 22px 96px;
+`;
+
+function App() {
+  const [darkMode, setDarkMode] = useState(true);
+  const { currentUser } = useSelector((state) => state.user);
+
   return (
-    <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/sign-in' element={<SignIn />} />
-        <Route path='/sign-up' element={<SignUp />} />
-        <Route path='/about' element={<About />} />
-        <Route path='/search' element={<Search />} />
-        <Route path='/listing/:listingId' element={<Listing />} />
-
-        <Route element={<PrivateRoute />}>
-          <Route path='/profile' element={<Profile />} />
-          <Route path='/create-listing' element={<CreateListing />} />
-          <Route path='/videoupload' element={<VideoUpload />} />
-          <Route
-            path='/update-listing/:listingId'
-            element={<UpdateListing />}
-          />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+      <Container>
+        <BrowserRouter>
+          <Menu darkMode={darkMode} setDarkMode={setDarkMode} />
+          <Main>
+            <Navbar />
+            <Wrapper>
+              <Routes>
+                <Route path="/">
+                  <Route index element={<Home type="random" />} />
+                  <Route path="trends" element={<Home type="trend" />} />
+                 
+                  <Route path="subscriptions" element={<Home type="sub" />} />
+                  <Route path="search" element={<Search />} />
+                  <Route
+                    path="signin"
+                    element={currentUser ? <Home /> : <SignIn />}
+                  />
+                  <Route path="video">
+                    <Route path=":id" element={<Video />} />
+                  
+                  </Route>
+                </Route>
+                <Route path="/profile" element={<Profile/>} />
+              </Routes>
+            </Wrapper>
+          </Main>
+        </BrowserRouter>
+      </Container>
+    </ThemeProvider>
   );
 }
+
+export default App;
