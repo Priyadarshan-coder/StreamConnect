@@ -8,20 +8,53 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
-  videos    Video[]  @relation("UserVideos")
-  password  String
-  avatar    String   @default("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  email           String   @unique
+  password        String?
+  img             String?
+  subscribers     Int      @default(0)
+  subscribedUsers String[]
+  fromGoogle      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  videos   Video[]   // One user can have many videos
+  comments Comment[] // One user can have many comments
 }
 
+
+
 model Video {
-  id             Int      @id @default(autoincrement())
-  uniqueId       String   @unique
-  userEmail      String
-  user           User     @relation("UserVideos", fields: [userEmail], references: [email])
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  desc      String
+  imgUrl    String
+  videoUrl  String
+  views     Int      @default(0)
+  tags      String[] @default([])
+  likes     String[] @default([])
+  dislikes  String[] @default([])
   chunkPaths     String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user     User      @relation(fields: [userId], references: [id]) // Many videos can belong to one user
+  comments Comment[] // One video can have many comments
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  videoId   Int
+  desc      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user  User  @relation(fields: [userId], references: [id])  // Many comments can belong to one user
+  video Video @relation(fields: [videoId], references: [id]) // Many comments can belong to one video
 }
