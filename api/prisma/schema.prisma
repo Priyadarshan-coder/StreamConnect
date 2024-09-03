@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+<<<<<<< HEAD
 model User {
   id              Int      @id @default(autoincrement())
   name            String   @unique
@@ -57,4 +58,54 @@ model Comment {
   // Relationships
   user  User  @relation(fields: [userId], references: [id])  // Many comments can belong to one user
   video Video @relation(fields: [videoId], references: [id]) // Many comments can belong to one video
+=======
+model Video {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  desc      String
+  imgUrl    String
+  videoUrl  String
+  views     Int      @default(0)
+  tags      String[] @default([])
+  likes     String[] @default([])
+  dislikes  String[] @default([])
+  chunkPaths     String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user     User      @relation(fields: [userId], references: [id]) // Many videos can belong to one user
+  comments Comment[] // One video can have many comments
 }
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  videoId   Int
+  desc      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user  User  @relation(fields: [userId], references: [id])  // Many comments can belong to one user
+  video Video @relation(fields: [videoId], references: [id]) // Many comments can belong to one video
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String   @unique
+  password        String?
+  avatar          String?
+  subscribers     Int      @default(0)
+  subscribedUsers String[] @default([])
+  fromGoogle      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  videos          Video[]
+  comments        Comment[]
+>>>>>>> api-new
+}
+
+
+
