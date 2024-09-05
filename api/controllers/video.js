@@ -51,7 +51,7 @@ export const addVideo = async (req, res) => {
                     title: title,
                     desc: desc,
                     imgUrl: imgUrl,
-                    videoUrl: '../api/services/transcoded',
+                    videoUrl: './transcoded/title_output_',
                     chunkPaths: chunkPathsStore[uniqueId],
                     tags: tag_res
                 },
