@@ -1,9 +1,16 @@
-import express from 'express';
-import { google, signOut } from '../controllers/auth.js';
+import express from "express";
+import { google, signOut } from "../controllers/auth.js";
 
-const routes = express.Router();
+const router = express.Router();
 
-routes.post('/google', google);
-routes.get('/signout', signOut)
+//CREATE A USER
+//router.post("/signup", signup)
 
-export default routes;
+//SIGN IN
+//router.post("/signin", signin)
+
+//GOOGLE AUTH
+router.post("/google", google);
+router.post("/signout",signOut);
+
+export default router;

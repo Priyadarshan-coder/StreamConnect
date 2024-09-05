@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector} from "react-redux";
 import styled from "styled-components";
 import {
   getStorage,
@@ -78,6 +79,9 @@ const Upload = ({ setOpen }) => {
   const [videoPerc, setVideoPerc] = useState(0);
   const [inputs, setInputs] = useState({});
   const [tags, setTags] = useState([]);
+  const [videochunks, setvideochunks]= useState({});
+  const [videofile, setVideoFile] = useState(null);
+  const { currentUser } = useSelector((state) => state.user);
 
   const navigate = useNavigate()
 
@@ -102,7 +106,7 @@ const Upload = ({ setOpen }) => {
       (snapshot) => {
         const progress =
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        urlType === "imgUrl" ? setImgPerc(Math.round(progress)) : setVideoPerc(Math.round(progress));
+         setImgPerc(Math.round(progress));
         switch (snapshot.state) {
           case "paused":
             console.log("Upload is paused");
@@ -125,9 +129,39 @@ const Upload = ({ setOpen }) => {
     );
   };
 
+
+  
+  
+
+  
+  const VideoUpload = async () => {
+    if (!videofile) {
+      return;
+    }
+
+    const chunkSize = 5 * 1024 * 1024;
+    const totalChunks = Math.ceil(videofile.size / chunkSize);
+    const chunksArray = [];
+
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(videofile.size, start + chunkSize);
+      const chunk = videofile.slice(start, end);
+      chunksArray.push(chunk);
+    }
+
+    const formData = new FormData();
+    chunksArray.forEach((chunk, index) => {
+      formData.append('chunks', chunk, `chunk-${index}.part`);
+    });
+    formData.append('totalChunks', totalChunks);   
+    setvideochunks(formData);
+    
+  };
+
   useEffect(() => {
-    video && uploadFile(video , "videoUrl");
-  }, [video]);
+    videofile && VideoUpload( );
+  }, [videofile]);
 
   useEffect(() => {
     img && uploadFile(img, "imgUrl");
@@ -135,9 +169,52 @@ const Upload = ({ setOpen }) => {
 
   const handleUpload = async (e)=>{
     e.preventDefault();
-    const res = await axios.post("/videos", {...inputs, tags})
+    try{
+    /*const res = await axios.post("/videos", {...inputs, tags,videochunks})
     setOpen(false)
     res.status===200 && navigate(`/video/${res.data._id}`)
+*/
+
+const formData = new FormData();
+
+// Append video chunks to formData
+for (let pair of videochunks.entries()) {
+  formData.append(pair[0], pair[1]);
+}
+
+// Append inputs (title, description, and image URL) to formData
+formData.append("title", inputs.title);
+formData.append("desc", inputs.desc);
+formData.append("imgUrl", inputs.imgUrl); 
+
+// Append tags to formData
+formData.append("tags", tags);
+formData.append("id", currentUser.id); 
+
+// Send the form data to the backend
+const res = await axios.post('/api/videos/', formData, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+  withCredentials: true,
+  onUploadProgress: (progressEvent) => {
+    const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+    setVideoPerc(progress);
+  },
+});
+
+setVideoPerc(0);
+setOpen(false);
+res.status === 200 && navigate(`/video/${res.data._id}`);
+    }
+
+
+
+    
+    catch(error)
+    {
+      console.error('Error uploading chunks:', error);
+    }
   }
 
   return (
@@ -152,7 +229,7 @@ const Upload = ({ setOpen }) => {
           <Input
             type="file"
             accept="video/*"
-            onChange={(e) => setVideo(e.target.files[0])}
+            onChange={(e) => setVideoFile(e.target.files[0])}
           />
         )}
         <Input
@@ -170,7 +247,7 @@ const Upload = ({ setOpen }) => {
         <Input
           type="text"
           placeholder="Separate the tags with commas."
-          onChance={handleTags}
+          onChange={handleTags}
         />
         <Label>Image:</Label>
         {imgPerc > 0 ? (

@@ -1,16 +1,83 @@
-import User from "../models/User.js";
-import Video from "../models/Video.js";
-import { createError } from "../error.js";
+import { errorHandler } from "../utils/error.js";
 
-export const addVideo = async (req, res, next) => {
-  const newVideo = new Video({ userId: req.user.id, ...req.body });
-  try {
-    const savedVideo = await newVideo.save();
-    res.status(200).json(savedVideo);
-  } catch (err) {
-    next(err);
-  }
+import path from 'path';
+import fs from 'fs-extra';
+import crypto from 'crypto';
+import prisma from '../DB/db.config.js';
+import { generateBlobSASQueryParameters, ContainerSASPermissions, StorageSharedKeyCredential, BlobServiceClient } from '@azure/storage-blob';
+import { produceMessage } from '../services/kafka.js';
+
+// Azure Storage configuration
+const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
+const containerClient = blobServiceClient.getContainerClient(process.env.containerName);
+
+// In-memory store for chunk paths
+const chunkPathsStore = {};
+let uploadCounter = 0;
+
+
+// Handle chunk uploads
+export const addVideo = async (req, res) => {
+  console.log(req.body);
+  
+    const { title, totalChunks: chunksCount, desc, imgUrl, tags, id} = req.body;
+    const tag_res = tags.split(","); 
+    const uniqueId = title; // Create a unique identifier for each video
+    const videoDir = `${uniqueId}`; // Directory for this video file
+
+    const totalChunks = parseInt(chunksCount, 10);
+    const uploadDir = req.UPLOAD_DIR; // Use the upload directory from the request object
+
+    try {
+        const uploadPromises = req.files.map(file => {
+            const blobClient = containerClient.getBlockBlobClient(`${videoDir}/${file.originalname}`);
+            return blobClient.uploadFile(path.join(uploadDir, file.filename))
+                .then(() => fs.remove(path.join(uploadDir, file.filename)))
+                .then(() => {
+                    // Store the exact path of the uploaded chunk
+                    if (!chunkPathsStore[uniqueId]) {
+                        chunkPathsStore[uniqueId] = [];
+                    }
+                    chunkPathsStore[uniqueId].push(`${videoDir}/${file.originalname}`);
+                });
+        });
+
+        await Promise.all(uploadPromises);
+
+        if (chunkPathsStore[uniqueId].length > 0) {
+            const newvideo = await prisma.video.create({
+                data: {
+                    userId: parseInt(id,10),
+                    title: title,
+                    desc: desc,
+                    imgUrl: imgUrl,
+                    videoUrl: '../api/services/transcoded',
+                    chunkPaths: chunkPathsStore[uniqueId],
+                    tags: tag_res
+                },
+            });
+          
+        }
+
+        uploadCounter += req.files.length;
+
+        if (uploadCounter === totalChunks) {
+            uploadCounter = 0; // Reset counter for future uploads
+            console.log('All chunks uploaded to Azure');
+            res.status(200).send('All chunks uploaded to Azure');
+            await produceMessage({uniqueId:uniqueId,chunkPaths:chunkPathsStore[uniqueId]});
+            console.log("Message produced to Kafka Broker");
+        } else {
+            console.log('Chunks uploaded, waiting for more...');
+            res.status(200).send('Chunks uploaded, waiting for more...');
+        }
+    } catch (error) {
+        console.error('Error uploading chunks to Azure:', error);
+        res.status(500).send('Failed to upload chunks to Azure');
+    }
 };
+
+
 
 export const updateVideo = async (req, res, next) => {
   try {

@@ -46,7 +46,7 @@ export const reassembleVideo = async (uniqueId, chunkPathsStore) => {
     }
 
     const randomFilename = `${crypto.randomBytes(16).toString('hex')}.mp4`;
-    const outputFilePath = path.join(OUTPUT_DIR, randomFilename);
+    const outputFilePath = path.join(OUTPUT_DIR, uniqueId);
     const baseUrl = `https://youtubeclone.blob.core.windows.net/${process.env.containerName}/`;
 
     console.log(`Starting reassembly for video with unique ID: ${uniqueId}`);
@@ -97,8 +97,8 @@ export const reassembleVideo = async (uniqueId, chunkPathsStore) => {
             fs.removeSync(localChunkPath); 
         }
 
-        console.log(`File reassembled and saved as ${randomFilename}`);
-        return randomFilename; 
+        console.log(`File reassembled and saved as ${uniqueId}`);
+        return uniqueId; 
     } catch (error) {
         console.error('Error reassembling video from Azure:', error);
         throw new Error('Failed to reassemble video from Azure');

@@ -33,8 +33,8 @@ const SignIn = () => {
           .post("/api/auth/google", {
             name: result.user.displayName,
             email: result.user.email,
-            img: result.user.photoURL,
-          })
+            photo: result.user.photoURL,
+          },{withCredentials:true})
           .then((res) => {
             dispatch(loginSuccess(res.data));
             navigate("/");

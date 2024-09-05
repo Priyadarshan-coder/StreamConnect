@@ -8,12 +8,12 @@ export const google = async (req, res, next) => {
       console.log(req.body.email);
       console.log(req.body.password);
       console.log(req.body.photo);
-      const user = await prisma.User.findUnique({
+      const User = await prisma.user.findUnique({
         where: { email:req.body.email },
       });
-      if (user) {
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-        const { password: pass, ...rest } = user;
+      if (User) {
+        const token = jwt.sign({ id: User._id }, process.env.JWT_SECRET);
+        const { password: pass, ...rest } = User;
         res
           .cookie('access_token', token, { httpOnly: true })
           .status(200)
@@ -23,9 +23,9 @@ export const google = async (req, res, next) => {
           Math.random().toString(36).slice(-8) +
           Math.random().toString(36).slice(-8);
         const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
-        const newUser = await prisma.User.create({
+        const newUser = await prisma.user.create({
           data:{
-          username:
+          name:
             req.body.name.split(' ').join('').toLowerCase() +
             Math.random().toString(36).slice(-4),
           email: req.body.email,
@@ -35,7 +35,7 @@ export const google = async (req, res, next) => {
         });
   
         const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
-        const { password: pass, ...rest } = user;
+        const { password: pass, ...rest } = User;
         res
           .cookie('access_token', token, { httpOnly: true })
           .status(200)

@@ -6,7 +6,7 @@ import { darkTheme, lightTheme } from "./utils/Theme";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Video from "./pages/Video";
-import SignIn from "./pages/SignIn";
+import SignIn from "./pages/Signin";
 import Search from "./pages/Search";
 import { useSelector } from "react-redux";
 import Profile from "./pages/Profile";

@@ -98,7 +98,7 @@ const Navbar = () => {
               <VideoCallOutlinedIcon onClick={() => setOpen(true)} />
               
               <Avatar onClick={()=>navigate(`/profile`)}src={currentUser.avatar} />
-              {currentUser.name}
+              
             </User>
            
 

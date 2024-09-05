@@ -4,10 +4,14 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs-extra';
 import { fileURLToPath } from 'url'; 
-import userRouter from './routes/user.route.js';
-import authRouter from './routes/auth.route.js';
-import uploadRouter from './routes/upload.route.js';
-
+//import userRouter from './routes/user.route.js';
+//import authRouter from './routes/auth.route.js';
+//import uploadRouter from './routes/upload.route.js';
+import userRoutes from "./routes/user.js";
+import videoRoutes from "./routes/video.js";
+import commentRoutes from "./routes/comment.js";
+import authRoutes from "./routes/auth.js";
+import cors from 'cors';
 dotenv.config();
 
 // Define __dirname for ES module
@@ -15,6 +19,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -40,9 +46,12 @@ app.use((req, res, next) => {
 });
 
 // Initialize routes
-app.use('/api/user', userRouter);
-app.use('/api/auth', authRouter);
-app.use('/api/video', uploadRouter);
+
+
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/videos", videoRoutes);
+app.use("/api/comments", commentRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '/client/dist')));

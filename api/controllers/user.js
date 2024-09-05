@@ -1,6 +1,5 @@
-import { createError } from "../error.js";
-import User from "../models/User.js";
-import Video from "../models/Video.js";
+import { errorHandler } from "../utils/error.js";
+
 
 export const update = async (req, res, next) => {
   if (req.params.id === req.user.id) {
@@ -17,7 +16,7 @@ export const update = async (req, res, next) => {
       next(err);
     }
   } else {
-    return next(createError(403, "You can update only your account!"));
+    return next(errorHandlerr(403, "You can update only your account!"));
   }
 };
 
@@ -30,7 +29,7 @@ export const deleteUser = async (req, res, next) => {
       next(err);
     }
   } else {
-    return next(createError(403, "You can delete only your account!"));
+    return next(errorHandler(403, "You can delete only your account!"));
   }
 };
 

@@ -47,7 +47,7 @@ model User {
   avatar          String?
   subscribers     Int      @default(0)
   subscribedUsers String[] @default([])
-  fromGoogle      Boolean  @default(false)
+  fromGoogle      Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   videos          Video[]
