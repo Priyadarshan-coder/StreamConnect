@@ -51,7 +51,8 @@ export const addVideo = async (req, res) => {
                     title: title,
                     desc: desc,
                     imgUrl: imgUrl,
-                    videoUrl: './transcoded/title_output_',
+                   // videoUrl: './transcoded/title_output_',
+                   videoUrl: 'https://www.youtube.com/watch?v=Kxv6m-mQfy8',
                     chunkPaths: chunkPathsStore[uniqueId],
                     tags: tag_res
                 },
@@ -81,16 +82,20 @@ export const addVideo = async (req, res) => {
 
 export const updateVideo = async (req, res, next) => {
   try {
-    const video = await Video.findById(req.params.id);
+    const videoId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    const video = await prisma.video.findUnique({
+      where: { id: videoId },
+    });
+
     if (!video) return next(createError(404, "Video not found!"));
-    if (req.user.id === video.userId) {
-      const updatedVideo = await Video.findByIdAndUpdate(
-        req.params.id,
-        {
-          $set: req.body,
-        },
-        { new: true }
-      );
+
+    if (userId === video.userId) {
+      const updatedVideo = await prisma.video.update({
+        where: { id: videoId },
+        data: req.body,
+      });
       res.status(200).json(updatedVideo);
     } else {
       return next(createError(403, "You can update only your video!"));
@@ -102,10 +107,21 @@ export const updateVideo = async (req, res, next) => {
 
 export const deleteVideo = async (req, res, next) => {
   try {
-    const video = await Video.findById(req.params.id);
+    const videoId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    
+    const video = await prisma.video.findUnique({
+      where: { id: videoId },
+    });
+
     if (!video) return next(createError(404, "Video not found!"));
-    if (req.user.id === video.userId) {
-      await Video.findByIdAndDelete(req.params.id);
+
+    if (userId === video.userId) {
+    
+      await prisma.video.delete({
+        where: { id: videoId },
+      });
       res.status(200).json("The video has been deleted.");
     } else {
       return next(createError(403, "You can delete only your video!"));
@@ -117,7 +133,15 @@ export const deleteVideo = async (req, res, next) => {
 
 export const getVideo = async (req, res, next) => {
   try {
-    const video = await Video.findById(req.params.id);
+    const videoId = parseInt(req.params.id);
+
+    // Fetch the video by ID
+    const video = await prisma.video.findUnique({
+      where: { id: videoId },
+    });
+
+    if (!video) return next(createError(404, "Video not found!"));
+
     res.status(200).json(video);
   } catch (err) {
     next(err);
@@ -126,9 +150,17 @@ export const getVideo = async (req, res, next) => {
 
 export const addView = async (req, res, next) => {
   try {
-    await Video.findByIdAndUpdate(req.params.id, {
-      $inc: { views: 1 },
+    const videoId = parseInt(req.params.id);
+
+    const updatedVideo = await prisma.video.update({
+      where: { id: videoId },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
     });
+
     res.status(200).json("The view has been increased.");
   } catch (err) {
     next(err);
@@ -137,7 +169,8 @@ export const addView = async (req, res, next) => {
 
 export const random = async (req, res, next) => {
   try {
-    const videos = await Video.aggregate([{ $sample: { size: 40 } }]);
+    const videos = await prisma.$queryRaw`SELECT * FROM "Video" ORDER BY RANDOM() LIMIT 40`;
+
     res.status(200).json(videos);
   } catch (err) {
     next(err);
@@ -146,7 +179,13 @@ export const random = async (req, res, next) => {
 
 export const trend = async (req, res, next) => {
   try {
-    const videos = await Video.find().sort({ views: -1 });
+  
+    const videos = await prisma.video.findMany({
+      orderBy: {
+        views: 'desc',
+      },
+    });
+
     res.status(200).json(videos);
   } catch (err) {
     next(err);
@@ -155,25 +194,44 @@ export const trend = async (req, res, next) => {
 
 export const sub = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    const userId = parseInt(req.user.id,10);
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { subscribedUsers: true },
+    });
+
+    if (!user) return next(createError(404, "User not found!"));
+
     const subscribedChannels = user.subscribedUsers;
 
-    const list = await Promise.all(
-      subscribedChannels.map(async (channelId) => {
-        return await Video.find({ userId: channelId });
-      })
-    );
+    // Fetch videos from all subscribed channels
+    const videos = await prisma.video.findMany({
+      where: {
+        userId: { in: subscribedChannels },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-    res.status(200).json(list.flat().sort((a, b) => b.createdAt - a.createdAt));
+    res.status(200).json(videos);
   } catch (err) {
     next(err);
-  }
-};
+  }};
 
 export const getByTag = async (req, res, next) => {
   const tags = req.query.tags.split(",");
   try {
-    const videos = await Video.find({ tags: { $in: tags } }).limit(20);
+    const videos = await prisma.video.findMany({
+      where: {
+        tags: {
+          hasSome: tags, 
+        },
+      },
+      take: 20, 
+    });
+
     res.status(200).json(videos);
   } catch (err) {
     next(err);
@@ -181,11 +239,19 @@ export const getByTag = async (req, res, next) => {
 };
 
 export const search = async (req, res, next) => {
-  const query = req.query.q;
-  try {
-    const videos = await Video.find({
-      title: { $regex: query, $options: "i" },
-    }).limit(40);
+  const query = req.query.q ; // Ensure query is a string
+try{
+    // Search videos with titles containing the query string (case-insensitive)
+    const videos = await prisma.video.findMany({
+      where: {
+        title: {
+          contains: query,
+          mode: 'insensitive', // Case-insensitive search
+        },
+      },
+      take: 40, // Limit the number of results to 40
+    });
+
     res.status(200).json(videos);
   } catch (err) {
     next(err);

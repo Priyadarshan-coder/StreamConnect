@@ -124,10 +124,7 @@ export default function Profile() {
     </div>
   </div>
 
-  <p className='text-red-700 mt-5'>{error ? error : ''}</p>
-  <p className='text-green-700 mt-5'>
-    {updateSuccess ? 'User is updated successfully!' : ''}
-  </p>
+  
 
   <p className='text-red-700 mt-5'>
     {showListingsError ? 'Error showing listings' : ''}

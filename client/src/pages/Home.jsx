@@ -7,7 +7,8 @@ const Home = ({ type }) => {
 
   useEffect(() => {
     const fetchVideos = async () => {
-      const res = await axios.get(`/videos/${type}`);
+      const res = await axios.get(`/api/videos/${type}`);
+      //console.log(res);
       setVideos(res.data);
     };
     fetchVideos();
@@ -16,7 +17,7 @@ const Home = ({ type }) => {
   return (
     <div className="flex justify-between flex-wrap">
       {videos.map((video) => (
-        <Card key={video._id} video={video} />
+        <Card key={video.id} video={video} />
       ))}
     </div>
   );

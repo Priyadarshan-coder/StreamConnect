@@ -1,10 +1,16 @@
 import { errorHandler } from "../utils/error.js";
+import prisma from '../DB/db.config.js';
 
 export const addComment = async (req, res, next) => {
-  const newComment = new Comment({ ...req.body, userId: req.user.id });
   try {
-    const savedComment = await newComment.save();
-    res.status(200).send(savedComment);
+    const newComment = await prisma.comment.create({
+      data: {
+        ...req.body,
+        userId: req.user.id,
+      },
+    });
+
+    res.status(200).json(newComment);
   } catch (err) {
     next(err);
   }
@@ -27,7 +33,13 @@ export const deleteComment = async (req, res, next) => {
 
 export const getComments = async (req, res, next) => {
   try {
-    const comments = await Comment.find({ videoId: req.params.videoId });
+    const videoId = parseInt(req.params.videoId); // Ensure videoId is an integer
+
+    // Fetch comments related to the specific video
+    const comments = await prisma.comment.findMany({
+      where: { videoId: videoId },
+    });
+
     res.status(200).json(comments);
   } catch (err) {
     next(err);

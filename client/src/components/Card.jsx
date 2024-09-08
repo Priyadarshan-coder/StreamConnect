@@ -9,7 +9,8 @@ const Card = ({ type, video }) => {
   useEffect(() => {
     const fetchChannel = async () => {
       try {
-        const res = await axios.get(`/users/find/${video.userId}`);
+        const res = await axios.get(`/api/users/find/${video.userId}`);
+        //console.log(res);
         setChannel(res.data);
       } catch (err) {
         console.error(err);
@@ -19,7 +20,7 @@ const Card = ({ type, video }) => {
   }, [video.userId]);
 
   return (
-    <Link to={`/video/${video._id}`} className="no-underline">
+    <Link to={`videos/${video.id}`} className="no-underline">
       <div className={`flex ${type === "sm" ? "gap-2 mb-2" : "flex-col w-72 mb-12"} cursor-pointer`}>
         <img
           src={video.imgUrl}

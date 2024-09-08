@@ -9,7 +9,7 @@ import transcodeVideo from './transcode.js';
 // Initialize __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const outputDir = path.join(__dirname, 'transcoded');
+const outputDir = path.join(__dirname, '../../client/public/transcode');
 
 const kafka = new Kafka({
   clientId: 'video-transcode-service',

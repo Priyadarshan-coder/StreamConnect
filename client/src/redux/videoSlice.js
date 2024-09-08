@@ -39,7 +39,7 @@ export const videoSlice = createSlice({
           state.currentVideo.likes.findIndex(
             (userId) => userId === action.payload
           ),
-          1
+          
         );
       }
     },

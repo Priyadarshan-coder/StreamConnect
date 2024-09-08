@@ -7,7 +7,7 @@ const Recommendation = ({ tags }) => {
 
   useEffect(() => {
     const fetchVideos = async () => {
-      const res = await axios.get(`/videos/tags?tags=${tags}`);
+      const res = await axios.get(`/api/videos/tags?tags=${tags}`);
       setVideos(res.data);
     };
     fetchVideos();
@@ -16,7 +16,7 @@ const Recommendation = ({ tags }) => {
   return (
     <div className="flex-2">
       {videos.map((video) => (
-        <Card type="sm" key={video._id} video={video} />
+        <Card type="sm" key={video.id} video={video} />
       ))}
     </div>
   );
